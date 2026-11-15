@@ -1,5 +1,4 @@
 
-# Run and deploy your AI Studio app
 ## Run Locally
 
 1. Install dependencies:
