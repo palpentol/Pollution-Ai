@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pollution AI — Simulator &amp; Failure Audit</title>
+    <meta name="description" content="Interactive what-if ML simulator, live Open-Meteo weather & air quality fetcher, and honest failure audit cases for Pollution AI." />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class'
+      };
+    </script>
+    <link rel="stylesheet" href="/css/app.css" />
+  </head>
+  <body class="bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 min-h-screen">
+    <div class="min-h-screen flex flex-col max-w-[1320px] mx-auto">
+      <header id="nafas-topbar" class="shrink-0"></header>
+
+      <main class="flex-1 p-4 sm:p-6 space-y-6">
+        <div id="nafas-page-banner"></div>
+
+        <!-- Section 1: Top Grid Menu (4 Interactive Module Cards) -->
+        <section class="space-y-3">
+          <h2 class="text-sm font-bold text-zinc-700 dark:text-zinc-300" data-i18n="sim_grid_title">
+            Interactive ML Inference &amp; Failure Audit Modules
+          </h2>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            <button type="button" data-sim-module="live" class="sim-module-card text-left p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-500 transition-colors space-y-2">
+              <div class="w-9 h-9 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 flex items-center justify-center">
+                <i data-lucide="cloud-sun" class="w-5 h-5"></i>
+              </div>
+              <div class="text-sm font-bold text-zinc-900 dark:text-zinc-100" data-i18n="sim_card1_title">Live Open-Meteo Weather &amp; AQ Fetcher</div>
+              <p class="text-xs text-zinc-500 dark:text-zinc-400 leading-snug" data-i18n="sim_card1_desc"></p>
+            </button>
+
+            <button type="button" data-sim-module="whatif" class="sim-module-card text-left p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-500 transition-colors space-y-2">
+              <div class="w-9 h-9 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 flex items-center justify-center">
+                <i data-lucide="sliders" class="w-5 h-5"></i>
+              </div>
+              <div class="text-sm font-bold text-zinc-900 dark:text-zinc-100" data-i18n="sim_card2_title">Interactive ML What-If Simulator</div>
+              <p class="text-xs text-zinc-500 dark:text-zinc-400 leading-snug" data-i18n="sim_card2_desc"></p>
+            </button>
+
+            <button type="button" data-sim-module="audit1" class="sim-module-card text-left p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-amber-500 transition-colors space-y-2">
+              <div class="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                <i data-lucide="cloud-rain" class="w-5 h-5"></i>
+              </div>
+              <div class="text-sm font-bold text-zinc-900 dark:text-zinc-100" data-i18n="sim_card3_title">Failure Audit Case 1: False Alarm</div>
+              <p class="text-xs text-zinc-500 dark:text-zinc-400 leading-snug" data-i18n="sim_card3_desc"></p>
+            </button>
+
+            <button type="button" data-sim-module="audit2" class="sim-module-card text-left p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-red-500 transition-colors space-y-2">
+              <div class="w-9 h-9 rounded-xl bg-red-50 dark:bg-red-950/60 text-red-600 dark:text-red-400 flex items-center justify-center">
+                <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+              </div>
+              <div class="text-sm font-bold text-zinc-900 dark:text-zinc-100" data-i18n="sim_card4_title">Failure Audit Case 2: Missed Warning</div>
+              <p class="text-xs text-zinc-500 dark:text-zinc-400 leading-snug" data-i18n="sim_card4_desc"></p>
+            </button>
+          </div>
+        </section>
+
+        <!-- Section 2: Dynamic Working Frame Area -->
+        <section class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-5 sm:p-6 min-h-[380px]">
+          <div id="sim-empty-state" class="h-80 flex flex-col items-center justify-center text-center px-4 space-y-3">
+            <div class="w-12 h-12 rounded-2xl bg-zinc-100 dark:bg-zinc-800 text-zinc-400 flex items-center justify-center">
+              <i data-lucide="mouse-pointer-click" class="w-6 h-6"></i>
+            </div>
+            <p class="text-base font-bold text-zinc-800 dark:text-zinc-200" data-i18n="sim_placeholder">
+              Select a simulator or failure audit module above to begin
+            </p>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 max-w-md" data-i18n="sim_placeholder_sub"></p>
+          </div>
+
+          <!-- Module 1: Live Open-Meteo Fetcher -->
+          <div id="sim-panel-live" class="hidden space-y-5">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-zinc-200 dark:border-zinc-800">
+              <div>
+                <h3 class="text-lg font-bold text-zinc-900 dark:text-zinc-100" data-i18n="sim_live_title">Live Open-Meteo Weather &amp; Air Quality Fetcher</h3>
+                <div id="live-station-badge" class="text-xs font-mono-tabular text-zinc-600 dark:text-zinc-400 mt-0.5">--</div>
+              </div>
+              <button type="button" id="btn-live-fetch" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-zinc-900 text-xs font-semibold whitespace-nowrap shrink-0">
+                <i data-lucide="download-cloud" class="w-4 h-4"></i>
+                <span data-i18n="sim_live_btn">Fetch Live Forecast Now</span>
+              </button>
+            </div>
+
+            <div class="text-xs text-zinc-600 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-2.5" data-i18n="sim_live_provenance"></div>
+            <div id="live-fetch-error" class="hidden text-xs font-medium text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-xl px-4 py-2.5"></div>
+
+            <div id="live-results-wrap" class="hidden space-y-5">
+              <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800">
+                  <div class="text-[11px] text-zinc-500 dark:text-zinc-400">Today PM2.5 (Lag-1)</div>
+                  <div id="live-val-today" class="text-lg font-bold font-mono-tabular mt-1">--</div>
+                </div>
+                <div class="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800">
+                  <div class="text-[11px] text-zinc-500 dark:text-zinc-400">3-Day Rolling Avg</div>
+                  <div id="live-val-rolling" class="text-lg font-bold font-mono-tabular mt-1">--</div>
+                </div>
+                <div class="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800">
+                  <div class="text-[11px] text-zinc-500 dark:text-zinc-400">Tomorrow Wind &amp; Dir</div>
+                  <div id="live-val-wind" class="text-lg font-bold font-mono-tabular mt-1">--</div>
+                </div>
+                <div class="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800">
+                  <div class="text-[11px] text-zinc-500 dark:text-zinc-400">Tomorrow Rain &amp; RH</div>
+                  <div id="live-val-rain" class="text-lg font-bold font-mono-tabular mt-1">--</div>
+                </div>
+              </div>
+
+              <div class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-5 flex-1">
+                  <div>
+                    <div class="text-xs text-zinc-500 dark:text-zinc-400" data-i18n="sim_out_gbr">Pollution AI ML (GBR)</div>
+                    <div id="live-out-gbr" class="text-2xl font-bold font-mono-tabular text-zinc-900 dark:text-white">--</div>
+                  </div>
+                  <div>
+                    <div class="text-xs text-zinc-500 dark:text-zinc-400" data-i18n="sim_out_base">Persistence Baseline</div>
+                    <div id="live-out-base" class="text-xl font-bold font-mono-tabular text-zinc-700 dark:text-zinc-300">--</div>
+                  </div>
+                  <div>
+                    <div class="text-xs text-zinc-500 dark:text-zinc-400" data-i18n="sim_out_prob">Alert Probability</div>
+                    <div id="live-out-prob" class="text-xl font-bold font-mono-tabular">--</div>
+                  </div>
+                  <div>
+                    <div class="text-xs text-zinc-500 dark:text-zinc-400">Status</div>
+                    <div id="live-out-status" class="text-sm font-bold mt-1">--</div>
+                  </div>
+                </div>
+
+                <div class="flex flex-col items-end gap-1.5 shrink-0">
+                  <button type="button" id="btn-live-apply" class="px-4 py-2 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-xs font-semibold whitespace-nowrap shrink-0" data-i18n="sim_live_apply">Set as Active Dashboard Forecast</button>
+                  <span id="live-applied-msg" class="hidden text-xs font-semibold text-emerald-600 dark:text-emerald-400" data-i18n="sim_live_applied"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Module 2: Interactive ML What-If Simulator -->
+          <div id="sim-panel-whatif" class="hidden space-y-6">
+            <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-zinc-200 dark:border-zinc-800">
+              <h3 class="text-lg font-bold text-zinc-900 dark:text-zinc-100" data-i18n="sim_whatif_title">Interactive ML What-If Simulator</h3>
+              <button type="button" id="btn-whatif-reset" class="px-3.5 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 whitespace-nowrap shrink-0" data-i18n="sim_whatif_reset">Reset Defaults</button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              <div class="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-1.5">
+                  <div class="flex justify-between text-xs font-semibold">
+                    <label for="inp-lag1" data-i18n="sim_lbl_lag1">Today PM2.5 (Lag-1)</label>
+                    <span id="val-lag1" class="font-mono-tabular text-zinc-900 dark:text-white">--</span>
+                  </div>
+                  <input id="inp-lag1" type="range" min="10" max="85" step="0.5" class="w-full nafas-slider whatif-input" />
+                </div>
+
+                <div class="space-y-1.5">
+                  <div class="flex justify-between text-xs font-semibold">
+                    <label for="inp-lag2" data-i18n="sim_lbl_lag2">Yesterday PM2.5 (Lag-2)</label>
+                    <span id="val-lag2" class="font-mono-tabular text-zinc-900 dark:text-white">--</span>
+                  </div>
+                  <input id="inp-lag2" type="range" min="10" max="85" step="0.5" class="w-full nafas-slider whatif-input" />
+                </div>
+
+                <div class="space-y-1.5">
+                  <div class="flex justify-between text-xs font-semibold">
+                    <label for="inp-prev2" data-i18n="sim_lbl_prev2">2 Days Ago PM2.5</label>
+                    <span id="val-prev2" class="font-mono-tabular text-zinc-900 dark:text-white">--</span>
+                  </div>
+                  <input id="inp-prev2" type="range" min="10" max="85" step="0.5" class="w-full nafas-slider whatif-input" />
+                </div>
+
+                <div class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 flex items-center justify-between">
+                  <span class="text-xs font-semibold text-zinc-600 dark:text-zinc-300" data-i18n="sim_lbl_rolling">3-Day Rolling Avg</span>
+                  <span id="val-rolling" class="text-sm font-bold font-mono-tabular text-zinc-900 dark:text-zinc-100">--</span>
+                </div>
+
+                <div class="space-y-1.5">
+                  <div class="flex justify-between text-xs font-semibold">
+                    <label for="inp-wind" data-i18n="sim_lbl_wind">Wind Speed (km/h)</label>
+                    <span id="val-wind" class="font-mono-tabular text-zinc-900 dark:text-white">--</span>
+                  </div>
+                  <input id="inp-wind" type="range" min="2" max="22" step="0.2" class="w-full nafas-slider whatif-input" />
+                </div>
+
+                <div class="space-y-1.5">
+                  <div class="flex justify-between text-xs font-semibold">
+                    <label for="inp-winddir" data-i18n="sim_lbl_winddir">Wind Direction (deg)</label>
+                    <span id="val-winddir" class="font-mono-tabular text-zinc-900 dark:text-white">--</span>
+                  </div>
+                  <input id="inp-winddir" type="range" min="0" max="360" step="5" class="w-full nafas-slider whatif-input" />
+                </div>
+
+                <div class="space-y-1.5">
+                  <div class="flex justify-between text-xs font-semibold">
+                    <label for="inp-rain" data-i18n="sim_lbl_rain">Rainfall (mm)</label>
+                    <span id="val-rain" class="font-mono-tabular text-zinc-900 dark:text-white">--</span>
+                  </div>
+                  <input id="inp-rain" type="range" min="0" max="25" step="0.2" class="w-full nafas-slider whatif-input" />
+                </div>
+
+                <div class="space-y-1.5">
+                  <div class="flex justify-between text-xs font-semibold">
+                    <label for="inp-hum" data-i18n="sim_lbl_hum">Relative Humidity (%)</label>
+                    <span id="val-hum" class="font-mono-tabular text-zinc-900 dark:text-white">--</span>
+                  </div>
+                  <input id="inp-hum" type="range" min="40" max="98" step="1" class="w-full nafas-slider whatif-input" />
+                </div>
+
+                <div class="sm:col-span-2">
+                  <label for="inp-daytype" class="block text-xs font-semibold mb-1.5" data-i18n="sim_lbl_daytype">Day Type Indicator</label>
+                  <select id="inp-daytype" class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 whatif-input">
+                    <option value="0" data-i18n="sim_opt_weekday">Weekday (School / Commuter Traffic)</option>
+                    <option value="1" data-i18n="sim_opt_weekend">Weekend (Lower Commuter Traffic)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="lg:col-span-5 space-y-4 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-800/40">
+                <div class="flex items-center justify-between gap-2">
+                  <h4 class="text-sm font-bold text-zinc-900 dark:text-zinc-100" data-i18n="sim_out_title">Real-Time ML Inference Output</h4>
+                  <span id="sim-out-status-badge" class="px-2.5 py-1 rounded-lg text-xs font-bold border">--</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                  <div class="p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                    <div class="text-[11px] text-zinc-500 dark:text-zinc-400" data-i18n="sim_out_gbr">Pollution AI ML (GBR)</div>
+                    <div id="sim-out-gbr" class="text-2xl font-bold font-mono-tabular text-zinc-900 dark:text-white mt-0.5">--</div>
+                  </div>
+                  <div class="p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                    <div class="text-[11px] text-zinc-500 dark:text-zinc-400" data-i18n="sim_out_prob">Alert Probability</div>
+                    <div id="sim-out-prob" class="text-2xl font-bold font-mono-tabular text-zinc-900 dark:text-zinc-100 mt-0.5">--</div>
+                  </div>
+                  <div class="p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                    <div class="text-[11px] text-zinc-500 dark:text-zinc-400" data-i18n="sim_out_ridge">Ridge Regression</div>
+                    <div id="sim-out-ridge" class="text-base font-bold font-mono-tabular text-zinc-700 dark:text-zinc-300 mt-0.5">--</div>
+                  </div>
+                  <div class="p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                    <div class="text-[11px] text-zinc-500 dark:text-zinc-400" data-i18n="sim_out_base">Persistence Baseline</div>
+                    <div id="sim-out-base" class="text-base font-bold font-mono-tabular text-zinc-500 dark:text-zinc-400 mt-0.5">--</div>
+                  </div>
+                </div>
+
+                <div class="pt-2 space-y-2">
+                  <div class="text-xs font-bold text-zinc-700 dark:text-zinc-300" data-i18n="sim_out_contrib">Feature Contribution Breakdown (µg/m³)</div>
+                  <div class="h-44 w-full">
+                    <canvas id="chart-sim-contrib"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Module 3 & 4: Failure Audit Error Analysis View -->
+          <div id="sim-panel-audit" class="hidden space-y-5">
+            <div class="pb-4 border-b border-zinc-200 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-2">
+              <h3 id="audit-heading" class="text-lg font-bold text-zinc-900 dark:text-zinc-100">--</h3>
+              <span class="text-xs font-mono-tabular text-zinc-500 dark:text-zinc-400">
+                <span data-i18n="audit_label_date">Recorded Test Date</span>: <strong id="audit-date-val" class="text-zinc-900 dark:text-zinc-100">--</strong>
+              </span>
+            </div>
+
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div class="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800">
+                <div class="text-xs text-zinc-500 dark:text-zinc-400" data-i18n="audit_label_actual">Actual Next-Day PM2.5</div>
+                <div id="audit-actual-val" class="text-xl font-bold font-mono-tabular mt-1">--</div>
+              </div>
+              <div class="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800">
+                <div class="text-xs text-zinc-500 dark:text-zinc-400" data-i18n="audit_label_pred">ML Model Prediction</div>
+                <div id="audit-ml-val" class="text-xl font-bold font-mono-tabular text-zinc-900 dark:text-white mt-1">--</div>
+              </div>
+              <div class="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800">
+                <div class="text-xs text-zinc-500 dark:text-zinc-400" data-i18n="audit_label_base">Persistence Baseline</div>
+                <div id="audit-base-val" class="text-xl font-bold font-mono-tabular text-zinc-700 dark:text-zinc-300 mt-1">--</div>
+              </div>
+              <div class="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800">
+                <div class="text-xs text-zinc-500 dark:text-zinc-400" data-i18n="audit_label_error">Forecast Residual</div>
+                <div id="audit-err-val" class="text-xl font-bold font-mono-tabular text-red-600 dark:text-red-400 mt-1">--</div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+              <div class="h-64 w-full">
+                <canvas id="chart-audit-compare"></canvas>
+              </div>
+
+              <div class="space-y-4">
+                <div class="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800 space-y-1.5">
+                  <h4 class="text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300" data-i18n="audit_label_anomaly">Meteorological &amp; Local Anomaly</h4>
+                  <p id="audit-anomaly-text" class="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed"></p>
+                </div>
+                <div class="p-4 rounded-xl bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 space-y-1.5">
+                  <h4 class="text-xs font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300" data-i18n="audit_label_limit">Honest Limitation of Daily-Averaged Features</h4>
+                  <p id="audit-limit-text" class="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed"></p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer id="nafas-footer" class="shrink-0 rounded-t-2xl overflow-hidden border-t border-zinc-200 dark:border-zinc-800"></footer>
+    </div>
+
+    <div id="nafas-modals"></div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+    <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+    <script src="/js/data.js"></script>
+    <script src="/js/ml-engine.js"></script>
+    <script src="/js/i18n.js"></script>
+    <script src="/js/app-core.js"></script>
+    <script src="/js/page-simulator.js"></script>
+  </body>
+</html>

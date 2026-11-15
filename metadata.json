@@ -1,0 +1,6 @@
+{
+  "name": "NafasPagi AI — Next-Day PM2.5 Early Warning System",
+  "description": "Next-day PM2.5 air quality early warning system for school outdoor activities in the Surabaya-Gresik industrial-urban corridor using time-series ML and open meteorological data.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
