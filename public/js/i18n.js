@@ -394,7 +394,7 @@
 
       // Real-Time Air Quality Map
       map_section_title: 'Peta Kualitas Udara Real-Time Surabaya–Gresik',
-      map_section_sub: 'Tampilan koridor Google Maps langsung dengan telemetri PM2.5 stasiun, lapisan heatmap kualitas udara, dan konteks angin.',
+      map_section_sub: 'Tampilan koridor OpenStreetMap langsung dengan telemetri PM2.5 stasiun, lapisan heatmap kualitas udara, dan konteks angin.',
       map_toggle_heatmap: 'Lapisan Heatmap AQ',
       map_btn_recenter: 'Pusatkan Koridor',
       map_legend_safe: 'Aman (≤ 35 µg/m³)',
