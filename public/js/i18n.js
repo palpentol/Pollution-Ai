@@ -86,7 +86,7 @@
 
       // Real-Time Air Quality Map
       map_section_title: 'Surabaya–Gresik Real-Time Air Quality Map',
-      map_section_sub: 'Live Google Maps corridor view with PM2.5 station telemetry, Air Quality heatmap overlay, and wind transport context.',
+      map_section_sub: 'Live OpenStreetMap corridor view with PM2.5 station telemetry, Air Quality heatmap overlay, and wind transport context.',
       map_toggle_heatmap: 'AQ Heatmap Layer',
       map_btn_recenter: 'Recenter Corridor',
       map_legend_safe: 'Safe (≤ 35 µg/m³)',
